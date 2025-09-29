@@ -5,6 +5,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from core.state import TradingState
 from core.execution_adapter import PaperTradingAdapter, LiveTradingAdapter
 from core.utils import calculate_position_size
+import random
 
 
 class TradingController:
