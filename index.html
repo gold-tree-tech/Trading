@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAS Trader Pro - Strategy Automation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .trading-terminal {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        .state-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: #0f172a;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        
+        .state-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .state-idle { background-color: #6b7280; }
+        .state-long { background-color: #10b981; }
+        .state-paused { background-color: #f59e0b; }
+        .state-exited { background-color: #ef4444; }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .control-group {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .control-group h3 {
+            margin-bottom: 15px;
+            color: #94a3b8;
+            font-size: 16px;
+        }
+        
+        .ticker-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .ticker-input input, .ticker-input select {
+            flex: 1;
+            padding: 12px 15px;
+            background: #334155;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+        
+        .control-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .profile-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .profile-btn {
+            flex: 1;
+            padding: 10px;
+            background: #334155;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .profile-btn.active {
+            background: #3b82f6;
+            border-color: #2563eb;
+        }
+        
+        .strategy-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .condition-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .condition-select {
+            flex: 1;
+            padding: 8px 12px;
+            background: #334155;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .status-display {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        
+        .status-card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .status-card h3 {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+        
+        .status-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .chart-container {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .signals {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .signal-card {
+            background: #334155;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .signal-card h3 {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+        
+        .signal-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .signal-change {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+        .neutral { color: #94a3b8; }
+        
+        .logs-container {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .logs {
+            height: 200px;
+            overflow-y: auto;
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .log-entry {
+            padding: 8px 0;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .log-time { 
+            color: #94a3b8;
+            margin-right: 10px;
+        }
+        
+        .log-buy { color: #10b981; }
+        .log-sell { color: #ef4444; }
+        .log-info { color: #3b82f6; }
+        .log-warning { color: #f59e0b; }
+        .log-error { color: #ef4444; }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            background: #1e293b;
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success { border-left-color: #10b981; }
+        .notification.error { border-left-color: #ef4444; }
+        .notification.warning { border-left-color: #f59e0b; }
+        
+        .custom-panel {
+            margin-top: 15px;
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        
+        .custom-panel h4 {
+            margin-bottom: 15px;
+            color: #94a3b8;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: #334155;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        
+        .conditions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .conditions-section {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .conditions-section h5 {
+            margin-bottom: 10px;
+            color: #94a3b8;
+        }
+        
+        .indicators-panel {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .indicator-item {
+            padding: 8px;
+            background: #1e293b;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        
+        .indicator-name {
+            color: #94a3b8;
+        }
+        
+        .indicator-value {
+            color: #f8fafc;
+            font-weight: bold;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .pulse { animation: pulse 2s infinite; }
+        
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="trading-terminal">
+            <div class="header">
+                <div class="logo">
+                    <div class="logo-icon">DAS</div>
+                    <div>
+                        <h1>DAS Trader Pro</h1>
+                        <p>5-Minute Long-Only Strategy</p>
+                    </div>
+                </div>
+                <div class="state-indicator">
+                    <div class="state-dot state-idle" id="stateDot"></div>
+                    <span id="stateText">IDLE</span>
+                </div>
+            </div>
+            
+            <div class="controls-grid">
+                <div class="control-group">
+                    <h3>Trading Controls</h3>
+                    <div class="ticker-input">
+                        <input type="text" id="tickerInput" placeholder="Enter ticker symbol" value="SPY">
+                        <button class="btn" onclick="updateTicker()">Update Ticker</button>
+                    </div>
+                    <div class="profile-selector">
+                        <div class="profile-btn active" data-profile="safe_mode">Safe Mode</div>
+                        <div class="profile-btn" data-profile="risky_business">Risky Business</div>
+                    </div>
+                    <div class="ticker-input">
+                        <button class="btn btn-success" id="startBtn" onclick="startStrategy()">Start Strategy</button>
+                        <button class="btn btn-secondary" onclick="refreshState()">Refresh</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Strategy Controls</h3>
+                    <div class="control-buttons">
+                        <button class="btn btn-warning" id="pauseBtn" onclick="pauseStrategy()" disabled>Pause</button>
+                        <button class="btn btn-success" id="resumeBtn" onclick="resumeStrategy()" disabled>Resume</button>
+                        <button class="btn btn-danger" id="emergencyBtn" onclick="emergencyExit()" disabled>Emergency Exit</button>
+                        <button class="btn btn-secondary" onclick="clearLogs()">Clear Logs</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Strategy Configuration</h3>
+                    <div class="strategy-selector">
+                        <select id="strategySelect" onchange="onStrategyChange()">
+                            <option value="default">5-Minute Breakout</option>
+                            <option value="mean_reversion">Mean Reversion</option>
+                            <option value="momentum">Momentum</option>
+                            <option value="scalping">Scalping</option>
+                            <option value="custom">Custom Strategy</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Custom Strategy Builder -->
+                    <div id="customStrategyPanel" class="custom-panel" style="display: none;">
+                        <h4>Custom Strategy Builder</h4>
+                        
+                        <div class="form-group">
+                            <label>Strategy Name:</label>
+                            <input type="text" id="strategyName" placeholder="My Custom Strategy">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Description:</label>
+                            <textarea id="strategyDescription" placeholder="Describe your strategy..."></textarea>
+                        </div>
+                        
+                        <div class="conditions-grid">
+                            <div class="conditions-section">
+                                <h5>Entry Conditions</h5>
+                                <div id="entryConditions">
+                                    <div class="condition-row">
+                                        <select class="condition-select">
+                                            <option value="">Select Condition</option>
+                                            <option value="price > ema_20">Price > EMA 20</option>
+                                            <option value="price > ema_10">Price > EMA 10</option>
+                                            <option value="rsi < 70">RSI < 70</option>
+                                            <option value="rsi > 30">RSI > 30</option>
+                                            <option value="volume > volume_sma_20">Volume > Avg Volume</option>
+                                            <option value="macd > macd_signal">MACD > Signal</option>
+                                            <option value="price < bb_lower">Price < Lower BB</option>
+                                            <option value="price > bb_upper">Price > Upper BB</option>
+                                        </select>
+                                        <button class="btn btn-danger" onclick="removeCondition(this)" style="padding: 5px 10px;">×</button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-secondary" onclick="addEntryCondition()" style="margin-top: 10px; width: 100%;">Add Entry Condition</button>
+                            </div>
+                            
+                            <div class="conditions-section">
+                                <h5>Exit Conditions</h5>
+                                <div id="exitConditions">
+                                    <div class="condition-row">
+                                        <select class="condition-select">
+                                            <option value="">Select Condition</option>
+                                            <option value="price < ema_10">Price < EMA 10</option>
+                                            <option value="rsi > 80">RSI > 80</option>
+                                            <option value="rsi < 20">RSI < 20</option>
+                                            <option value="macd < macd_signal">MACD < Signal</option>
+                                            <option value="price > bb_upper">Price > Upper BB</option>
+                                        </select>
+                                        <button class="btn btn-danger" onclick="removeCondition(this)" style="padding: 5px 10px;">×</button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-secondary" onclick="addExitCondition()" style="margin-top: 10px; width: 100%;">Add Exit Condition</button>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-success" onclick="saveCustomStrategy()">Save Strategy</button>
+                            <button class="btn btn-secondary" onclick="hideCustomStrategy()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-display">
+                <div class="status-grid">
+                    <div class="status-card">
+                        <h3>CURRENT STATE</h3>
+                        <div class="status-value" id="currentState">IDLE</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>CURRENT TICKER</h3>
+                        <div class="status-value" id="currentTicker">-</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>ACTIVE PROFILE</h3>
+                        <div class="status-value" id="currentProfile">-</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>EQUITY</h3>
+                        <div class="status-value" id="currentEquity">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Indicators Display -->
+            <div class="indicators-panel">
+                <h3>Technical Indicators</h3>
+                <div class="indicators-grid" id="indicatorsGrid">
+                    <div class="indicator-item">
+                        <div class="indicator-name">Price</div>
+                        <div class="indicator-value" id="indPrice">-</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-name">EMA 20</div>
+                        <div class="indicator-value" id="indEma20">-</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-name">RSI</div>
+                        <div class="indicator-value" id="indRsi">-</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-name">MACD</div>
+                        <div class="indicator-value" id="indMacd">-</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-name">Volume</div>
+                        <div class="indicator-value" id="indVolume">-</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-name">BB Upper</div>
+                        <div class="indicator-value" id="indBbUpper">-</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-name">BB Lower</div>
+                        <div class="indicator-value" id="indBbLower">-</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-name">Signal</div>
+                        <div class="indicator-value" id="indSignal">-</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart" id="priceChart">
+                    <svg width="100%" height="100%" id="chartSvg"></svg>
+                </div>
+            </div>
+            
+            <div class="signals">
+                <div class="signal-card">
+                    <h3>ENTRY SIGNAL</h3>
+                    <div class="signal-value" id="entrySignal">IDLE</div>
+                    <div class="signal-change neutral" id="entryPrice">-</div>
+                </div>
+                <div class="signal-card">
+                    <h3>TARGET PRICE</h3>
+                    <div class="signal-value" id="targetPrice">-</div>
+                    <div class="signal-change neutral">-</div>
+                </div>
+                <div class="signal-card">
+                    <h3>STOP LOSS</h3>
+                    <div class="signal-value" id="stopPrice">-</div>
+                    <div class="signal-change neutral">-</div>
+                </div>
+            </div>
+            
+            <div class="logs-container">
+                <div class="logs-header">
+                    <h3>TRADING LOGS</h3>
+                    <button class="btn btn-secondary" onclick="refreshLogs()">Refresh Logs</button>
+                </div>
+                <div class="logs" id="tradeLogs">
+                    <div class="log-entry">
+                        <span class="log-time" id="initialTime">00:00:00</span> - 
+                        <span class="log-info">Frontend initialized. Connecting to backend...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:8000';
+        let currentState = {};
+        let chartData = [];
+        let priceUpdateInterval;
+        let stateUpdateInterval;
+
+        // Initialize the application
+        async function init() {
+            showNotification('Connecting to trading backend...', 'info');
+            
+            // Set initial time
+            document.getElementById('initialTime').textContent = new Date().toLocaleTimeString();
+            
+            // Load initial state
+            await refreshState();
+            
+            // Load strategies
+            await refreshStrategies();
+            
+            // Set up profile buttons
+            setupProfileButtons();
+            
+            // Start periodic updates
+            startPeriodicUpdates();
+            
+            showNotification('Connected to trading backend', 'success');
+        }
+
+        // Setup profile selection buttons
+        function setupProfileButtons() {
+            document.querySelectorAll('.profile-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const profile = this.getAttribute('data-profile');
+                    await setProfile(profile);
+                });
+            });
+        }
+
+        // Start periodic updates
+        function startPeriodicUpdates() {
+            // Update state every 2 seconds
+            stateUpdateInterval = setInterval(refreshState, 2000);
+            
+            // Update chart every second
+            priceUpdateInterval = setInterval(updateChart, 1000);
+        }
+
+        // API Calls
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+                
+                if (data && (method === 'POST' || method === 'PUT')) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API call failed:', error);
+                showNotification(`API Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        // Refresh all state information
+        async function refreshState() {
+            try {
+                const state = await apiCall('/state');
+                currentState = state;
+                updateUI(state);
+                
+                // Also refresh logs
+                await refreshLogs();
+            } catch (error) {
+                console.error('Failed to refresh state:', error);
+            }
+        }
+
+        // Refresh logs
+        async function refreshLogs() {
+            try {
+                const logs = await apiCall('/logs?limit=50');
+                updateLogs(logs);
+            } catch (error) {
+                console.error('Failed to refresh logs:', error);
+            }
+        }
+
+        // Update ticker
+        async function updateTicker() {
+            const tickerInput = document.getElementById('tickerInput');
+            const ticker = tickerInput.value.trim().toUpperCase();
+            
+            if (!ticker) {
+                showNotification('Please enter a ticker symbol', 'warning');
+                return;
+            }
+            
+            try {
+                showNotification(`Updating ticker to ${ticker}...`, 'info');
+                await apiCall('/start', 'POST', { ticker });
+                await refreshState();
+                showNotification(`Ticker updated to ${ticker}`, 'success');
+            } catch (error) {
+                showNotification(`Failed to update ticker: ${error.message}`, 'error');
+            }
+        }
+
+        // Start strategy
+        async function startStrategy() {
+            const tickerInput = document.getElementById('tickerInput');
+            const ticker = tickerInput.value.trim().toUpperCase();
+            
+            if (!ticker) {
+                showNotification('Please enter a ticker symbol', 'warning');
+                return;
+            }
+            
+            try {
+                showNotification(`Starting strategy for ${ticker}...`, 'info');
+                const result = await apiCall('/start', 'POST', { ticker });
+                await refreshState();
+                showNotification(result.message, 'success');
+            } catch (error) {
+                showNotification(`Failed to start strategy: ${error.message}`, 'error');
+            }
+        }
+
+        // Pause strategy
+        async function pauseStrategy() {
+            try {
+                showNotification('Pausing strategy...', 'info');
+                const result = await apiCall('/pause', 'POST');
+                await refreshState();
+                showNotification(result.message, 'warning');
+            } catch (error) {
+                showNotification(`Failed to pause strategy: ${error.message}`, 'error');
+            }
+        }
+
+        // Resume strategy
+        async function resumeStrategy() {
+            try {
+                showNotification('Resuming strategy...', 'info');
+                const result = await apiCall('/resume', 'POST');
+                await refreshState();
+                showNotification(result.message, 'success');
+            } catch (error) {
+                showNotification(`Failed to resume strategy: ${error.message}`, 'error');
+            }
+        }
+
+        // Emergency exit
+        async function emergencyExit() {
+            if (!confirm('Are you sure you want to emergency exit? This will close all positions immediately!')) {
+                return;
+            }
+            
+            try {
+                showNotification('Emergency exit initiated...', 'warning');
+                const result = await apiCall('/emergency-exit', 'POST');
+                await refreshState();
+                showNotification(result.message, 'error');
+            } catch (error) {
+                showNotification(`Failed to emergency exit: ${error.message}`, 'error');
+            }
+        }
+
+        // Set profile
+        async function setProfile(profile) {
+            try {
+                showNotification(`Setting profile to ${profile}...`, 'info');
+                const result = await apiCall('/set-profile', 'POST', { profile });
+                
+                // Update profile buttons
+                document.querySelectorAll('.profile-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-profile="${profile}"]`).classList.add('active');
+                
+                await refreshState();
+                showNotification(result.message, 'success');
+            } catch (error) {
+                showNotification(`Failed to set profile: ${error.message}`, 'error');
+            }
+        }
+
+        // Strategy Management Functions
+        async function onStrategyChange() {
+            const strategySelect = document.getElementById('strategySelect');
+            const strategy = strategySelect.value;
+            
+            if (strategy === 'custom') {
+                showCustomStrategyPanel();
+                return;
+            }
+            
+            await setStrategy(strategy);
+        }
+
+        async function setStrategy(strategy) {
+            try {
+                showNotification(`Setting strategy to ${strategy}...`, 'info');
+                const result = await apiCall('/set-strategy', 'POST', { strategy });
+                await refreshState();
+                showNotification(result.message, 'success');
+            } catch (error) {
+                showNotification(`Failed to set strategy: ${error.message}`, 'error');
+            }
+        }
+
+        function showCustomStrategyPanel() {
+            document.getElementById('customStrategyPanel').style.display = 'block';
+        }
+
+        function hideCustomStrategy() {
+            document.getElementById('customStrategyPanel').style.display = 'none';
+            document.getElementById('strategySelect').value = 'default';
+        }
+
+        function addEntryCondition() {
+            const container = document.getElementById('entryConditions');
+            addConditionRow(container);
+        }
+
+        function addExitCondition() {
+            const container = document.getElementById('exitConditions');
+            addConditionRow(container);
+        }
+
+        function addConditionRow(container) {
+            const row = document.createElement('div');
+            row.className = 'condition-row';
+            row.innerHTML = `
+                <select class="condition-select">
+                    <option value="">Select Condition</option>
+                    <option value="price > ema_20">Price > EMA 20</option>
+                    <option value="price > ema_10">Price > EMA 10</option>
+                    <option value="rsi < 70">RSI < 70</option>
+                    <option value="rsi > 30">RSI > 30</option>
+                    <option value="volume > volume_sma_20">Volume > Avg Volume</option>
+                    <option value="macd > macd_signal">MACD > Signal</option>
+                    <option value="price < bb_lower">Price < Lower BB</option>
+                    <option value="price > bb_upper">Price > Upper BB</option>
+                </select>
+                <button class="btn btn-danger" onclick="removeCondition(this)" style="padding: 5px 10px;">×</button>
+            `;
+            container.appendChild(row);
+        }
+
+        function removeCondition(button) {
+            button.parentElement.remove();
+        }
+
+        async function saveCustomStrategy() {
+            const name = document.getElementById('strategyName').value;
+            const description = document.getElementById('strategyDescription').value;
+            
+            if (!name) {
+                showNotification('Please enter a strategy name', 'warning');
+                return;
+            }
+            
+            // Collect entry conditions
+            const entryConditions = [];
+            document.querySelectorAll('#entryConditions .condition-select').forEach(select => {
+                if (select.value) {
+                    entryConditions.push(select.value);
+                }
+            });
+            
+            // Collect exit conditions
+            const exitConditions = [];
+            document.querySelectorAll('#exitConditions .condition-select').forEach(select => {
+                if (select.value) {
+                    exitConditions.push(select.value);
+                }
+            });
+            
+            if (entryConditions.length === 0) {
+                showNotification('Please add at least one entry condition', 'warning');
+                return;
+            }
+            
+            const strategyConfig = {
+                name: name,
+                description: description,
+                conditions: {
+                    entry: entryConditions,
+                    exit: exitConditions
+                },
+                timeframe: "5min"
+            };
+            
+            try {
+                showNotification(`Creating strategy ${name}...`, 'info');
+                const result = await apiCall('/create-strategy', 'POST', {
+                    name: name,
+                    config: strategyConfig
+                });
+                
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    hideCustomStrategy();
+                    // Refresh strategy list
+                    await refreshStrategies();
+                    // Set the new strategy as active
+                    await setStrategy(name);
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                showNotification(`Failed to create strategy: ${error.message}`, 'error');
+            }
+        }
+
+        async function refreshStrategies() {
+            try {
+                const result = await apiCall('/strategies');
+                const strategySelect = document.getElementById('strategySelect');
+                
+                // Clear existing options except the first few
+                while (strategySelect.options.length > 4) { // Keep default options
+                    strategySelect.remove(4);
+                }
+                
+                // Add loaded strategies
+                result.strategies.forEach(strategy => {
+                    if (!['default', 'mean_reversion', 'momentum', 'scalping'].includes(strategy)) {
+                        const option = document.createElement('option');
+                        option.value = strategy;
+                        option.textContent = strategy;
+                        strategySelect.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to refresh strategies:', error);
+            }
+        }
+
+        async function loadStrategyConfig() {
+            const strategySelect = document.getElementById('strategySelect');
+            const strategy = strategySelect.value;
+            
+            if (strategy === 'custom') {
+                return;
+            }
+            
+            try {
+                const result = await apiCall(`/strategy/${strategy}`);
+                showNotification(`Loaded ${result.strategy.name} strategy`, 'info');
+                
+                // Display strategy configuration in console for now
+                console.log('Strategy config:', result.strategy);
+            } catch (error) {
+                showNotification(`Failed to load strategy: ${error.message}`, 'error');
+            }
+        }
+
+        // Clear logs
+        async function clearLogs() {
+            const logsContainer = document.getElementById('tradeLogs');
+            logsContainer.innerHTML = '';
+            
+            const time = new Date().toLocaleTimeString();
+            addLogEntry(time, 'Logs cleared', 'info');
+            
+            showNotification('Logs cleared', 'info');
+        }
+
+        // Update UI with current state
+        function updateUI(state) {
+            // Update state indicators
+            document.getElementById('stateText').textContent = state.current_state;
+            document.getElementById('currentState').textContent = state.current_state;
+            document.getElementById('currentTicker').textContent = state.ticker || '-';
+            document.getElementById('currentProfile').textContent = state.profile || '-';
+            document.getElementById('currentEquity').textContent = state.equity ? `$${state.equity.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '-';
+            
+            // Update state dot
+            const stateDot = document.getElementById('stateDot');
+            stateDot.className = 'state-dot';
+            stateDot.classList.add(`state-${state.current_state.toLowerCase()}`);
+            
+            // Update control buttons
+            updateControlButtons(state);
+            
+            // Update signals based on state
+            updateSignals(state);
+            
+            // Update technical indicators display
+            updateTechnicalIndicators();
+        }
+
+        // Update control buttons based on state
+        function updateControlButtons(state) {
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const resumeBtn = document.getElementById('resumeBtn');
+            const emergencyBtn = document.getElementById('emergencyBtn');
+            
+            const isActive = state.strategy_active;
+            const hasPosition = state.current_state === 'LONG';
+            
+            // Start button
+            startBtn.disabled = isActive;
+            startBtn.textContent = isActive ? 'Strategy Active' : 'Start Strategy';
+            
+            // Pause button
+            pauseBtn.disabled = !isActive;
+            
+            // Resume button
+            resumeBtn.disabled = isActive;
+            
+            // Emergency button
+            emergencyBtn.disabled = !hasPosition && !isActive;
+        }
+
+        // Update signals display
+        function updateSignals(state) {
+            const entrySignal = document.getElementById('entrySignal');
+            const entryPrice = document.getElementById('entryPrice');
+            const targetPrice = document.getElementById('targetPrice');
+            const stopPrice = document.getElementById('stopPrice');
+            
+            if (state.current_state === 'LONG' && state.position) {
+                const position = state.position;
+                entrySignal.textContent = 'HOLDING';
+                entrySignal.style.color = '#f59e0b';
+                entryPrice.textContent = `Entry: $${position.entry_price.toFixed(2)}`;
+                entryPrice.className = 'signal-change neutral';
+                
+                targetPrice.textContent = `$${position.take_profit.toFixed(2)}`;
+                targetPrice.nextElementSibling.textContent = `+${((position.take_profit - position.entry_price) / position.entry_price * 100).toFixed(1)}% from entry`;
+                targetPrice.nextElementSibling.className = 'signal-change positive';
+                
+                stopPrice.textContent = `$${position.stop_loss.toFixed(2)}`;
+                stopPrice.nextElementSibling.textContent = `-${((position.entry_price - position.stop_loss) / position.entry_price * 100).toFixed(1)}% from entry`;
+                stopPrice.nextElementSibling.className = 'signal-change negative';
+            } else if (state.strategy_active) {
+                entrySignal.textContent = 'MONITORING';
+                entrySignal.style.color = '#3b82f6';
+                entryPrice.textContent = 'Waiting for entry signal';
+                entryPrice.className = 'signal-change neutral';
+                
+                targetPrice.textContent = '-';
+                targetPrice.nextElementSibling.textContent = '-';
+                targetPrice.nextElementSibling.className = 'signal-change neutral';
+                
+                stopPrice.textContent = '-';
+                stopPrice.nextElementSibling.textContent = '-';
+                stopPrice.nextElementSibling.className = 'signal-change neutral';
+            } else {
+                entrySignal.textContent = 'IDLE';
+                entrySignal.style.color = '#6b7280';
+                entryPrice.textContent = 'Strategy not active';
+                entryPrice.className = 'signal-change neutral';
+                
+                targetPrice.textContent = '-';
+                targetPrice.nextElementSibling.textContent = '-';
+                targetPrice.nextElementSibling.className = 'signal-change neutral';
+                
+                stopPrice.textContent = '-';
+                stopPrice.nextElementSibling.textContent = '-';
+                stopPrice.nextElementSibling.className = 'signal-change neutral';
+            }
+        }
+
+        // Update technical indicators display with simulated data
+        function updateTechnicalIndicators() {
+            if (chartData.length < 20) return;
+            
+            const currentPrice = chartData[chartData.length - 1];
+            const ema20 = calculateEMA(chartData, 20);
+            const rsi = calculateRSI(chartData, 14);
+            const macd = calculateMACD(chartData);
+            const bb = calculateBollingerBands(chartData, 20);
+            
+            document.getElementById('indPrice').textContent = currentPrice.toFixed(2);
+            document.getElementById('indEma20').textContent = ema20.toFixed(2);
+            document.getElementById('indRsi').textContent = rsi.toFixed(1);
+            document.getElementById('indMacd').textContent = macd.macd.toFixed(3);
+            document.getElementById('indVolume').textContent = '1.2M';
+            document.getElementById('indBbUpper').textContent = bb.upper.toFixed(2);
+            document.getElementById('indBbLower').textContent = bb.lower.toFixed(2);
+            document.getElementById('indSignal').textContent = macd.signal > 0 ? 'BULLISH' : 'BEARISH';
+        }
+
+        // Update logs display
+        function updateLogs(logs) {
+            const logsContainer = document.getElementById('tradeLogs');
+            
+            // Clear existing logs (keep the initial message if no logs)
+            if (logs.length > 0) {
+                logsContainer.innerHTML = '';
+            }
+            
+            // Add log entries
+            logs.forEach(log => {
+                const time = new Date(log.timestamp).toLocaleTimeString();
+                let message = log.message || '';
+                let cssClass = 'log-info';
+                
+                // Determine log type based on content
+                if (log.event === 'ENTRY' || message.includes('BUY') || message.includes('ENTER LONG')) {
+                    cssClass = 'log-buy';
+                } else if (log.event === 'EXIT' || message.includes('SELL') || message.includes('EXIT TRADE')) {
+                    cssClass = 'log-sell';
+                } else if (message.includes('ERROR') || message.includes('FAILED')) {
+                    cssClass = 'log-error';
+                } else if (message.includes('WARNING') || message.includes('PAUSED')) {
+                    cssClass = 'log-warning';
+                }
+                
+                addLogEntry(time, message, cssClass);
+            });
+        }
+
+        // Add individual log entry
+        function addLogEntry(time, message, cssClass = 'log-info') {
+            const logsContainer = document.getElementById('tradeLogs');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `<span class="log-time">${time}</span> - <span class="${cssClass}">${message}</span>`;
+            logsContainer.appendChild(logEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        // Update chart with simulated data
+        function updateChart() {
+            const svg = document.getElementById('chartSvg');
+            
+            // Initialize chart data if empty
+            if (chartData.length === 0) {
+                for (let i = 0; i < 50; i++) {
+                    chartData.push(100 + Math.random() * 10 - 5);
+                }
+            }
+            
+            // Add new data point
+            const lastPrice = chartData[chartData.length - 1];
+            const newPrice = lastPrice + (Math.random() - 0.5) * 2;
+            chartData.push(newPrice);
+            if (chartData.length > 100) chartData.shift();
+            
+            // Clear SVG
+            svg.innerHTML = '';
+            
+            // Draw chart line
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            let pathData = `M 0 ${250 - (chartData[0] - 95) * 10}`;
+            
+            for (let i = 1; i < chartData.length; i++) {
+                pathData += ` L ${i * 8} ${250 - (chartData[i] - 95) * 10}`;
+            }
+            
+            path.setAttribute('d', pathData);
+            path.setAttribute('class', 'chart-line');
+            path.setAttribute('stroke', '#3b82f6');
+            path.setAttribute('stroke-width', '2');
+            path.setAttribute('fill', 'none');
+            svg.appendChild(path);
+        }
+
+        // Technical indicator calculations (simplified)
+        function calculateEMA(data, period) {
+            const multiplier = 2 / (period + 1);
+            let ema = data[0];
+            for (let i = 1; i < data.length; i++) {
+                ema = (data[i] - ema) * multiplier + ema;
+            }
+            return ema;
+        }
+
+        function calculateRSI(data, period) {
+            let gains = 0;
+            let losses = 0;
+            
+            for (let i = 1; i <= period; i++) {
+                const change = data[data.length - i] - data[data.length - i - 1];
+                if (change > 0) gains += change;
+                else losses -= change;
+            }
+            
+            const avgGain = gains / period;
+            const avgLoss = losses / period;
+            const rs = avgGain / avgLoss;
+            return 100 - (100 / (1 + rs));
+        }
+
+        function calculateMACD(data) {
+            const ema12 = calculateEMA(data, 12);
+            const ema26 = calculateEMA(data, 26);
+            const macd = ema12 - ema26;
+            const signal = calculateEMA([macd], 9); // Simplified
+            return { macd, signal };
+        }
+
+        function calculateBollingerBands(data, period) {
+            const slice = data.slice(-period);
+            const mean = slice.reduce((a, b) => a + b, 0) / period;
+            const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
+            const stdDev = Math.sqrt(variance);
+            
+            return {
+                upper: mean + (stdDev * 2),
+                middle: mean,
+                lower: mean - (stdDev * 2)
+            };
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            // Remove existing notifications
+            document.querySelectorAll('.notification').forEach(notification => {
+                notification.remove();
+            });
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

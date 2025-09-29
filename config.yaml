@@ -1,0 +1,97 @@
+mode: paper   # can be 'paper' or 'live'
+default_profile: safe_mode
+api_port: 8000
+log_file: "logs/trade_log.jsonl"
+profiles_db: "profiles.db"
+
+profiles:
+  safe_mode:
+    stop_loss_pct: 1.0
+    take_profit_pct: 2.0
+    capital_allocation_pct: 1.0
+  risky_business:
+    stop_loss_pct: 3.0
+    take_profit_pct: 6.0
+    capital_allocation_pct: 5.0
+
+# Optional: DAS API configuration for live trading
+das_api_config:
+  host: "localhost"
+  port: 9000
+  username: "your_username"
+  password: "your_password"
+
+# Strategy configuration
+strategies:
+  default:
+    name: "5-Minute Breakout"
+    description: "Basic breakout strategy on 5-minute charts"
+    conditions:
+      entry:
+        - "price > ema_20"
+        - "rsi < 70"
+        - "volume > volume_sma_20"
+      exit:
+        - "price < ema_10"
+        - "rsi > 80"
+    timeframe: "5min"
+
+  mean_reversion:
+    name: "Mean Reversion"
+    description: "Buys when price is below lower Bollinger Band, sells when above upper band"
+    conditions:
+      entry:
+        - "price < bb_lower"
+        - "rsi < 30"
+      exit:
+        - "price > bb_middle"
+        - "rsi > 70"
+    timeframe: "5min"
+
+  momentum:
+    name: "Momentum"
+    description: "Follows strong momentum with RSI confirmation"
+    conditions:
+      entry:
+        - "price > ema_10"
+        - "rsi > 50"
+        - "macd > macd_signal"
+      exit:
+        - "price < ema_10"
+        - "rsi < 40"
+    timeframe: "5min"
+
+  scalping:
+    name: "Scalping"
+    description: "Quick trades with tight stops"
+    conditions:
+      entry:
+        - "price > sma_5"
+        - "rsi between 40 and 60"
+      exit:
+        - "price < entry_price * 0.995"  # 0.5% stop loss
+        - "price > entry_price * 1.01"   # 1% take profit
+    timeframe: "1min"
+
+# Trading hours (optional)
+trading_hours:
+  start: "09:30"
+  end: "16:00"
+  timezone: "America/New_York"
+
+# Risk management
+risk_management:
+  max_daily_loss_pct: 2.0
+  max_position_size_pct: 10.0
+  max_open_positions: 1
+
+# Logging configuration
+logging:
+  level: "INFO"
+  max_log_files: 5
+  max_log_size_mb: 10
+
+# Market data configuration (for future enhancements)
+market_data:
+  source: "simulated"  # simulated, yahoo, alpaca, etc.
+  update_interval: 60  # seconds
