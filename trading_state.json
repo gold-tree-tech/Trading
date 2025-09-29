@@ -1,10 +1,10 @@
 {
   "current_state": "IDLE",
-  "ticker": "AMD",
+  "ticker": "MSTR",
   "profile": "risky_business",
   "equity": 99762.13808140873,
   "position": null,
   "strategy_active": true,
-  "last_updated": "2025-09-29T15:34:03.901775",
+  "last_updated": "2025-09-29T17:09:05.429235",
   "strategy": "scalping"
 }

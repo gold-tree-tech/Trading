@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import uvicorn
@@ -9,13 +11,15 @@ from core.state import TradingState
 from core.controller import TradingController
 from core.logger import TradeLogger
 from core.profiles import ProfileManager
-from core.strategy import StrategyEngine
 
 # Load configuration
 with open('config.yaml', 'r') as f:
     config = yaml.safe_load(f)
 
 app = FastAPI(title="DAS Trader Pro API", version="1.0.0")
+
+# MOUNT STATIC FILES - Serve frontend
+app.mount("/static", StaticFiles(directory="."), name="static")
 
 # CORS middleware
 app.add_middleware(
@@ -44,10 +48,13 @@ class TradeResponse(BaseModel):
     message: str
     state: Dict[str, Any]
 
+# SERVE FRONTEND
 @app.get("/")
-async def root():
-    return {"message": "DAS Trader Pro API", "version": "1.0.0"}
+async def serve_frontend():
+    """Serve the trading interface frontend"""
+    return FileResponse("index.html")
 
+# Your existing API endpoints
 @app.get("/state")
 async def get_state():
     """Get current trading state"""
@@ -149,7 +156,27 @@ async def create_strategy(request: dict):
 async def get_strategy(strategy_name: str):
     """Get specific strategy configuration"""
     try:
-        strategy = controller.strategy_engine.get_strategy(strategy_name)
+        # Mock strategy data
+        strategies = {
+            "default": {
+                "name": "5-Minute Breakout",
+                "description": "Basic breakout strategy",
+                "conditions": {
+                    "entry": ["price > average", "momentum > 0"],
+                    "exit": ["price < stop_loss", "price > take_profit"]
+                }
+            },
+            "momentum": {
+                "name": "Momentum", 
+                "description": "Follows strong momentum",
+                "conditions": {
+                    "entry": ["trend_upward", "volume_high"],
+                    "exit": ["trend_reversal", "target_reached"]
+                }
+            }
+        }
+        
+        strategy = strategies.get(strategy_name)
         if not strategy:
             raise HTTPException(status_code=404, detail="Strategy not found")
         return {"success": True, "strategy": strategy}
